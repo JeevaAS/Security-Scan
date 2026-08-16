@@ -4,7 +4,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV DOTNET_NOLOGO=true
 ENV NUGET_XMLDOC_MODE=skip
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
