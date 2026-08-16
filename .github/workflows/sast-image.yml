@@ -7,7 +7,11 @@ on:
       - main
     paths:
       - 'sonarqube/**'
+      - 'SonarQube/**'
+      - 'Sonar Qube/**'
+      - 'sonar/**'
       - 'coverity/**'
+      - 'Coverity/**'
       - 'blackduck/**'
       - 'script/**'
       - '.github/workflows/sast-image.yml'
@@ -66,11 +70,21 @@ jobs:
 
             sonar:
               - 'Sonar Qube/**'
+              - 'sonarqube/**'
+              - 'SonarQube/**'
               - 'sonar/**'
+              - 'Sonar/**'
+              - 'sonar*'
+              - 'sonar/**/Dockerfile'
+              - 'sonar/**/build.sh'
 
             coverity:
               - 'Coverity/**'
               - 'coverity/**'
+              - 'Coverity/**/Dockerfile'
+              - 'coverity/**/Dockerfile'
+              - 'coverity/**/build.sh'
+              - 'coverity*'
 
             blackduck:
               - 'Black Duck/**'
