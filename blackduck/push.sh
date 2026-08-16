@@ -23,6 +23,17 @@ echo "=============================================="
 
 echo "Image: ${IMAGE}"
 
+# If image not present locally, try to pull it from registry
+if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
+	echo "Image ${IMAGE} not present locally; attempting to pull from registry..."
+	docker pull "${IMAGE}" || true
+fi
+
+if ! docker image inspect "${IMAGE}" >/dev/null 2>&1; then
+	echo "Error: image ${IMAGE} not found locally or in registry. Nothing to push."
+	exit 1
+fi
+
 docker push "${IMAGE}"
 
 echo ""

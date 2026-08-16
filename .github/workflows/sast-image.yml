@@ -255,10 +255,13 @@ jobs:
           chmod +x build.sh
           ./build.sh
 
-          # verify image exists locally and push to registry so scanners can access it
+          # verify image exists locally and push coverity image to registry so scanners can access it
           echo "Verifying built image: ${REGISTRY}/sast-coverity:${IMAGE_TAG}"
           if ! docker image inspect "${REGISTRY}/sast-coverity:${IMAGE_TAG}" >/dev/null 2>&1; then
-            echo "Warning: image not found locally with registry tag; attempting to find local image by name"
+            echo "Warning: image not found locally with registry tag; attempting to find local image by image name"
+            if docker image inspect "sast-coverity:${IMAGE_TAG}" >/dev/null 2>&1; then
+              docker tag "sast-coverity:${IMAGE_TAG}" "${REGISTRY}/sast-coverity:${IMAGE_TAG}" || true
+            fi
           fi
 
           if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
@@ -269,13 +272,16 @@ jobs:
           echo "Pushing image to registry: ${REGISTRY}/sast-coverity:${IMAGE_TAG}"
           docker push "${REGISTRY}/sast-coverity:${IMAGE_TAG}" || true
 
-          # verify image exists locally and push to registry so scanners can access it
+          # verify image exists locally and push sonar image to registry so scanners can access it
           echo "Verifying built image: ${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
           if ! docker image inspect "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}" >/dev/null 2>&1; then
-            echo "Warning: image not found locally with registry tag; attempting to find local image by name"
+            echo "Warning: image not found locally with registry tag; attempting to find local image by image name"
+            # attempt to tag local image if present
+            if docker image inspect "sast-sonarqube:${IMAGE_TAG}" >/dev/null 2>&1; then
+              docker tag "sast-sonarqube:${IMAGE_TAG}" "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}" || true
+            fi
           fi
 
-          # login if credentials provided (for Artifactory or private registries)
           if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
             echo "Logging into registry ${REGISTRY}"
             echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
@@ -659,6 +665,18 @@ jobs:
           if ! docker image inspect "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
             echo "Warning: image not found locally with registry tag; attempting to find local image by name"
           fi
+          # ensure image is tagged with registry and push so it's available to other jobs
+          if ! docker image inspect "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
+            if docker image inspect "sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
+              docker tag "sast-blackduck:${IMAGE_TAG}" "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" || true
+            fi
+          fi
+          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
+            echo "Logging into registry ${REGISTRY}"
+            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
+          fi
+          echo "Pushing image to registry: ${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
+          docker push "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" || true
 
 
       - name: Trivy vulnerability scan
