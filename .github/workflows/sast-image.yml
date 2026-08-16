@@ -6,10 +6,10 @@ on:
     branches:
       - main
     paths:
-      - 'sonar/**'
-      - 'coverity/**'
-      - 'blackduck/**'
-      - 'scripts/**'
+      - 'Sonar Qube/**'
+      - 'Coverity/**'
+      - 'Black Duck/**'
+      - 'Script/**'
       - '.github/workflows/sast-image.yml'
 
   workflow_dispatch:
@@ -42,7 +42,7 @@ jobs:
 
     name: Detect Changed SAST Folder
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     outputs:
 
@@ -70,12 +70,15 @@ jobs:
           filters: |
 
             sonar:
+              - 'Sonar Qube/**'
               - 'sonar/**'
 
             coverity:
+              - 'Coverity/**'
               - 'coverity/**'
 
             blackduck:
+              - 'Black Duck/**'
               - 'blackduck/**'
 
 
@@ -99,7 +102,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
@@ -289,7 +292,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
@@ -408,7 +411,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
@@ -529,7 +532,7 @@ jobs:
         needs.blackduck.result == 'success'
       )
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     environment:
 
@@ -569,7 +572,7 @@ jobs:
       needs.sonar.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
@@ -608,7 +611,7 @@ jobs:
       needs.coverity.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
@@ -647,7 +650,7 @@ jobs:
       needs.blackduck.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, SAST]
+    runs-on: [self-hosted, SAST, Linux, X64]
 
     steps:
 
