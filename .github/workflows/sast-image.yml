@@ -42,7 +42,7 @@ jobs:
 
     name: Detect Changed SAST Folder
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     outputs:
 
@@ -99,7 +99,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     steps:
 
@@ -289,7 +289,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     steps:
 
@@ -408,7 +408,7 @@ jobs:
         )
       )
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     steps:
 
@@ -529,7 +529,7 @@ jobs:
         needs.blackduck.result == 'success'
       )
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     environment:
 
@@ -569,7 +569,7 @@ jobs:
       needs.sonar.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     steps:
 
@@ -608,7 +608,7 @@ jobs:
       needs.coverity.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, Windows, codespaces-d0d46f]
+    runs-on: codespaces-d0d46f
 
     steps:
 
@@ -647,7 +647,7 @@ jobs:
       needs.blackduck.result == 'success' &&
       needs.approval.result == 'success'
 
-    runs-on: [self-hosted, Windows, sast-windows]
+    runs-on: codespaces-d0d46f
 
     steps:
 
