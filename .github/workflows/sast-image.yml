@@ -221,10 +221,19 @@ jobs:
           echo "Building SonarQube Image"
           echo "=========================================="
 
-          cd sonar
-
+          # find sonar directory (case-insensitive) and run build
+          TARGET_DIR="sonar"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in sonarqube "Sonar Qube" sonar SonarQube; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: sonar directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x build.sh
-
           ./build.sh
 
 
@@ -242,9 +251,9 @@ jobs:
           echo "Trivy Security Scan"
           echo "=========================================="
 
-          chmod +x scripts/trivy-scan.sh
+          chmod +x Script/trivy.sh
 
-          ./scripts/trivy-scan.sh \
+          ./Script/trivy.sh \
             "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
 
       - name: List Trivy output files for debugging
@@ -406,10 +415,19 @@ jobs:
 
         run: |
 
-          cd coverity
-
+          # find coverity directory (case-insensitive) and run build
+          TARGET_DIR="coverity"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in coverity Coverity; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: coverity directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x build.sh
-
           ./build.sh
 
 
@@ -419,9 +437,9 @@ jobs:
 
         run: |
 
-          chmod +x scripts/trivy-scan.sh
+          chmod +x Script/trivy.sh
 
-          ./scripts/trivy-scan.sh \
+          ./Script/trivy.sh \
             "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
 
       - name: List Trivy output files for debugging
@@ -564,10 +582,19 @@ jobs:
 
         run: |
 
-          cd blackduck
-
+          # find blackduck directory (case-insensitive and common variants) and run build
+          TARGET_DIR="blackduck"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in blackduck "Black Duck" BlackDuck; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: blackduck directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x build.sh
-
           ./build.sh
 
 
@@ -577,9 +604,9 @@ jobs:
 
         run: |
 
-          chmod +x scripts/trivy-scan.sh
+          chmod +x Script/trivy.sh
 
-          ./scripts/trivy-scan.sh \
+          ./Script/trivy.sh \
             "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
 
       - name: List Trivy output files for debugging
@@ -710,10 +737,18 @@ jobs:
 
         run: |
 
-          cd sonar
-
+          TARGET_DIR="sonar"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in sonarqube "Sonar Qube" sonar SonarQube; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: sonar directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x push.sh
-
           ./push.sh
 
 
@@ -749,10 +784,18 @@ jobs:
 
         run: |
 
-          cd coverity
-
+          TARGET_DIR="coverity"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in coverity Coverity; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: coverity directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x push.sh
-
           ./push.sh
 
 
@@ -788,8 +831,16 @@ jobs:
 
         run: |
 
-          cd blackduck
-
+          TARGET_DIR="blackduck"
+          if [ ! -d "${TARGET_DIR}" ]; then
+            for alt in blackduck "Black Duck" BlackDuck; do
+              if [ -d "$alt" ]; then TARGET_DIR="$alt"; break; fi
+            done
+          fi
+          if [ ! -d "${TARGET_DIR}" ]; then
+            echo "Error: blackduck directory not found"
+            exit 1
+          fi
+          cd "${TARGET_DIR}"
           chmod +x push.sh
-
           ./push.sh
