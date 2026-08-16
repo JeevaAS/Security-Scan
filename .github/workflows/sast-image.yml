@@ -57,6 +57,14 @@ jobs:
       - name: Checkout repository
 
         uses: actions/checkout@v4
+
+      - name: Login to registry
+        if: ${{ env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
       # registry login intentionally omitted here; login performed in build/push jobs where required
 
 
@@ -218,6 +226,14 @@ jobs:
             echo "installed: $(trivy --version | head -n1)"
           fi
 
+      - name: Login to registry
+        if: ${{ env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
+
       - name: Install Trivy (if missing)
 
         shell: bash
@@ -229,6 +245,14 @@ jobs:
           else
             echo "trivy already installed"
           fi
+
+      - name: Login to registry
+        if: ${{ env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
 
       # ------------------------------------------------------
@@ -266,13 +290,13 @@ jobs:
             echo "Warning: image not found locally with registry tag; attempting to find local image by image name"
             if docker image inspect "sast-coverity:${IMAGE_TAG}" >/dev/null 2>&1; then
               docker tag "sast-coverity:${IMAGE_TAG}" "${REGISTRY}/sast-coverity:${IMAGE_TAG}" || true
+            elif [ -f built-image-id.txt ]; then
+              echo "Tagging built image by ID from built-image-id.txt"
+              docker tag "$(cat built-image-id.txt)" "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
             fi
           fi
 
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
-          fi
+          
 
           echo "Pushing image to registry: ${REGISTRY}/sast-coverity:${IMAGE_TAG}"
           docker push "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
@@ -284,13 +308,13 @@ jobs:
             # attempt to tag local image if present
             if docker image inspect "sast-sonarqube:${IMAGE_TAG}" >/dev/null 2>&1; then
               docker tag "sast-sonarqube:${IMAGE_TAG}" "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}" || true
+            elif [ -f built-image-id.txt ]; then
+              echo "Tagging built image by ID from built-image-id.txt"
+              docker tag "$(cat built-image-id.txt)" "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
             fi
           fi
 
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
-          fi
+          
 
           echo "Pushing image to registry: ${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
           docker push "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
@@ -680,12 +704,12 @@ jobs:
           if ! docker image inspect "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
             if docker image inspect "sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
               docker tag "sast-blackduck:${IMAGE_TAG}" "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" || true
+            elif [ -f built-image-id.txt ]; then
+              echo "Tagging built image by ID from built-image-id.txt"
+              docker tag "$(cat built-image-id.txt)" "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
             fi
           fi
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin
-          fi
+          
           echo "Pushing image to registry: ${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
           docker push "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
           
@@ -841,11 +865,7 @@ jobs:
           fi
           cd "${TARGET_DIR}"
 
-          # optional registry login using secrets; set REGISTRY_USERNAME and REGISTRY_PASSWORD in repo secrets
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
-          fi
+          
 
           chmod +x push.sh
           ./push.sh
@@ -879,6 +899,13 @@ jobs:
 
         uses: actions/checkout@v4
 
+      - name: Login to registry
+        if: ${{ env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
       - name: Push Coverity image
 
@@ -897,11 +924,7 @@ jobs:
             exit 1
           fi
           cd "${TARGET_DIR}"
-          # optional registry login using secrets; set REGISTRY_USERNAME and REGISTRY_PASSWORD in repo secrets
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
-          fi
+          
 
           chmod +x push.sh
           ./push.sh
@@ -934,6 +957,14 @@ jobs:
       - name: Checkout repository
 
         uses: actions/checkout@v4
+
+      - name: Login to registry
+        if: ${{ env.REGISTRY_USERNAME && env.REGISTRY_PASSWORD }}
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ env.REGISTRY_USERNAME }}
+          password: ${{ env.REGISTRY_PASSWORD }}
 
 
       - name: Push Black Duck image

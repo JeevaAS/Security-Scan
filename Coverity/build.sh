@@ -45,4 +45,5 @@ echo ""
 echo "Coverity image successfully built."
 
 docker image inspect "${IMAGE}" \
-    --format 'Image ID: {{.Id}}'
+    --format '{{.Id}}' > built-image-id.txt
+echo "Image ID: $(cat built-image-id.txt)"

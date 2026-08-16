@@ -36,7 +36,7 @@ echo "${IMAGE}"
 
 docker image inspect "${IMAGE}" > image-inspect.json
 
-echo ""
-echo "Image ID:"
 docker image inspect "${IMAGE}" \
-    --format '{{.Id}}'
+  --format '{{.Id}}' > built-image-id.txt
+echo ""
+echo "Image ID: $(cat built-image-id.txt)"
