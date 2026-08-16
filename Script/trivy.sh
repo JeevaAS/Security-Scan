@@ -1,9 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-# Usage: ./trivy-scan.sh <image>
-IMAGE="$1"
+# Usage: ./trivy.sh <image>
+if [ "$#" -lt 1 ]; then
+  echo "Usage: $0 <image>"
+  exit 1
+fi
 
+IMAGE="$1"
 JSON_REPORT="trivy-results.json"
 TABLE_REPORT="trivy-results.txt"
 SUMMARY_REPORT="trivy-summary.md"
@@ -15,6 +19,17 @@ echo "=========================================="
 echo ""
 echo "Image: $IMAGE"
 echo ""
+
+if ! command -v trivy >/dev/null 2>&1; then
+  echo "Error: trivy is not installed or not in PATH. Install Trivy: https://aquasecurity.github.io/trivy/"
+  exit 1
+fi
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "Error: jq is not installed or not in PATH. Install jq for JSON parsing."
+  exit 1
+fi
+
 echo "Starting Trivy scan..."
 
 # JSON report
@@ -34,12 +49,12 @@ echo "=========================================="
 echo " VULNERABILITY SUMMARY"
 echo "=========================================="
 
-# Parse counts using jq
-Critical=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="CRITICAL")] | length' "$JSON_REPORT")
-High=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="HIGH")] | length' "$JSON_REPORT")
-Medium=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="MEDIUM")] | length' "$JSON_REPORT")
-Low=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="LOW")] | length' "$JSON_REPORT")
-Unknown=$(jq '[.Results[].Vulnerabilities[]? | select(.Severity=="UNKNOWN")] | length' "$JSON_REPORT")
+# Parse counts using jq safely (handle empty/missing fields)
+Critical=$(jq '[(.Results[]?.Vulnerabilities[]? // []) | select(.Severity=="CRITICAL")] | length' "$JSON_REPORT")
+High=$(jq '[(.Results[]?.Vulnerabilities[]? // []) | select(.Severity=="HIGH")] | length' "$JSON_REPORT")
+Medium=$(jq '[(.Results[]?.Vulnerabilities[]? // []) | select(.Severity=="MEDIUM")] | length' "$JSON_REPORT")
+Low=$(jq '[(.Results[]?.Vulnerabilities[]? // []) | select(.Severity=="LOW")] | length' "$JSON_REPORT")
+Unknown=$(jq '[(.Results[]?.Vulnerabilities[]? // []) | select(.Severity=="UNKNOWN")] | length' "$JSON_REPORT")
 
 Total=$((Critical + High + Medium + Low + Unknown))
 
