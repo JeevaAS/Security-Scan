@@ -57,7 +57,6 @@ jobs:
       - name: Checkout repository
 
         uses: actions/checkout@v4
-
       # registry login intentionally omitted here; login performed in build/push jobs where required
 
 
@@ -276,7 +275,7 @@ jobs:
           fi
 
           echo "Pushing image to registry: ${REGISTRY}/sast-coverity:${IMAGE_TAG}"
-          docker push "${REGISTRY}/sast-coverity:${IMAGE_TAG}" || true
+          docker push "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
 
           # verify image exists locally and push sonar image to registry so scanners can access it
           echo "Verifying built image: ${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
@@ -294,7 +293,7 @@ jobs:
           fi
 
           echo "Pushing image to registry: ${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
-          docker push "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}" || true
+          docker push "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
 
 
       # ------------------------------------------------------
@@ -685,10 +684,11 @@ jobs:
           fi
           if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
             echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
+            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin
           fi
           echo "Pushing image to registry: ${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
-          docker push "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" || true
+          docker push "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
+          
 
 
       - name: Trivy vulnerability scan
