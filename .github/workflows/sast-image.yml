@@ -1,0 +1,674 @@
+name: SAST Image Build, Scan and Push
+
+on:
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'sonar/**'
+      - 'coverity/**'
+      - 'blackduck/**'
+      - 'scripts/**'
+      - '.github/workflows/sast-image.yml'
+
+  workflow_dispatch:
+    inputs:
+      scanner:
+        description: 'Select SAST image to build'
+        required: true
+        type: choice
+        options:
+          - sonar
+          - coverity
+          - blackduck
+          - all
+
+# ============================================================
+# GLOBAL VARIABLES
+# ============================================================
+
+env:
+
+  # Local Docker Registry
+  REGISTRY: localhost:5000
+
+  # Docker image tag
+  IMAGE_TAG: ${{ github.sha }}
+
+
+jobs:
+
+  # ==========================================================
+  # DETECT WHICH FOLDER CHANGED
+  # ==========================================================
+
+  changes:
+
+    name: Detect Changed SAST Folder
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    outputs:
+
+      sonar: ${{ steps.filter.outputs.sonar }}
+
+      coverity: ${{ steps.filter.outputs.coverity }}
+
+      blackduck: ${{ steps.filter.outputs.blackduck }}
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Detect folder changes
+
+        id: filter
+
+        uses: dorny/paths-filter@v3
+
+        with:
+
+          filters: |
+
+            sonar:
+              - 'sonar/**'
+
+            coverity:
+              - 'coverity/**'
+
+            blackduck:
+              - 'blackduck/**'
+
+
+  # ==========================================================
+  # SONAR IMAGE
+  # ==========================================================
+
+  sonar:
+
+    name: SonarQube SAST Image
+
+    needs: changes
+
+    if: |
+      needs.changes.outputs.sonar == 'true' ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        (
+          inputs.scanner == 'sonar' ||
+          inputs.scanner == 'all'
+        )
+      )
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      # ------------------------------------------------------
+      # Checkout
+      # ------------------------------------------------------
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      # ------------------------------------------------------
+      # Docker connectivity
+      # ------------------------------------------------------
+
+      - name: Docker connectivity test
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "Docker Connectivity Test"
+          echo "=========================================="
+
+          docker version
+
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Docker is not available"
+            exit 1
+          fi
+
+          echo "Docker connectivity successful."
+
+
+      # ------------------------------------------------------
+      # Local Docker Registry
+      # ------------------------------------------------------
+
+      - name: Local registry connectivity
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "Local Registry Connectivity"
+          echo "=========================================="
+
+          response=$(curl -s http://localhost:5000/v2/)
+
+          echo "Registry response:"
+          echo "$response"
+
+          if [ "$response" != "{}" ]; then
+            echo "WARNING: Unexpected registry response"
+          fi
+
+          echo "Registry connectivity successful."
+
+
+      # ------------------------------------------------------
+      # Trivy availability
+      # ------------------------------------------------------
+
+      - name: Trivy connectivity test
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "Trivy Version"
+          echo "=========================================="
+
+          trivy --version
+
+          if [ $? -ne 0 ]; then
+            echo "ERROR: Trivy is not installed"
+            exit 1
+          fi
+
+
+      # ------------------------------------------------------
+      # Build Docker Image
+      # ------------------------------------------------------
+
+      - name: Build SonarQube image
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "Building SonarQube Image"
+          echo "=========================================="
+
+          cd sonar
+
+          chmod +x build.sh
+
+          ./build.sh
+
+
+      # ------------------------------------------------------
+      # Trivy Scan
+      # ------------------------------------------------------
+
+      - name: Trivy vulnerability scan
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "Trivy Security Scan"
+          echo "=========================================="
+
+          chmod +x scripts/trivy-scan.sh
+
+          ./scripts/trivy-scan.sh \
+            "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
+
+
+      # ------------------------------------------------------
+      # Publish Trivy result to GitHub Summary
+      # ------------------------------------------------------
+
+      - name: Publish Trivy summary
+
+        if: always()
+
+        shell: bash
+
+        run: |
+
+          if [ -f trivy-summary.md ]; then
+
+            cat trivy-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+          fi
+
+
+      # ------------------------------------------------------
+      # Upload Trivy reports
+      # ------------------------------------------------------
+
+      - name: Upload Trivy reports
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: sonar-trivy-report-${{ github.sha }}
+
+          path: |
+
+            trivy-results.json
+
+            trivy-results.txt
+
+            trivy-summary.md
+
+          retention-days: 7
+
+
+  # ==========================================================
+  # COVERITY IMAGE
+  # ==========================================================
+
+  coverity:
+
+    name: Coverity SAST Image
+
+    needs: changes
+
+    if: |
+      needs.changes.outputs.coverity == 'true' ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        (
+          inputs.scanner == 'coverity' ||
+          inputs.scanner == 'all'
+        )
+      )
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Docker connectivity test
+
+        shell: bash
+
+        run: |
+
+          docker version
+
+
+      - name: Local registry connectivity
+
+        shell: bash
+
+        run: |
+
+          response=$(curl -s http://localhost:5000/v2/)
+
+          echo "Registry response: $response"
+
+
+      - name: Trivy connectivity test
+
+        shell: bash
+
+        run: |
+
+          trivy --version
+
+
+      - name: Build Coverity image
+
+        shell: bash
+
+        run: |
+
+          cd coverity
+
+          chmod +x build.sh
+
+          ./build.sh
+
+
+      - name: Trivy vulnerability scan
+
+        shell: bash
+
+        run: |
+
+          chmod +x scripts/trivy-scan.sh
+
+          ./scripts/trivy-scan.sh \
+            "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
+
+
+      - name: Publish Trivy summary
+
+        if: always()
+
+        shell: bash
+
+        run: |
+
+          if [ -f trivy-summary.md ]; then
+
+            cat trivy-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+          fi
+
+
+      - name: Upload Trivy reports
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: coverity-trivy-report-${{ github.sha }}
+
+          path: |
+
+            trivy-results.json
+
+            trivy-results.txt
+
+            trivy-summary.md
+
+          retention-days: 7
+
+
+  # ==========================================================
+  # BLACKDUCK IMAGE
+  # ==========================================================
+
+  blackduck:
+
+    name: Black Duck SAST Image
+
+    needs: changes
+
+    if: |
+      needs.changes.outputs.blackduck == 'true' ||
+      (
+        github.event_name == 'workflow_dispatch' &&
+        (
+          inputs.scanner == 'blackduck' ||
+          inputs.scanner == 'all'
+        )
+      )
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Docker connectivity test
+
+        shell: bash
+
+        run: |
+
+          docker version
+
+
+      - name: Local registry connectivity
+
+        shell: bash
+
+        run: |
+
+          response=$(curl -s http://localhost:5000/v2/)
+
+          echo "Registry response: $response"
+
+
+      - name: Trivy connectivity test
+
+        shell: bash
+
+        run: |
+
+          trivy --version
+
+
+      - name: Build Black Duck image
+
+        shell: bash
+
+        run: |
+
+          cd blackduck
+
+          chmod +x build.sh
+
+          ./build.sh
+
+
+      - name: Trivy vulnerability scan
+
+        shell: bash
+
+        run: |
+
+          chmod +x scripts/trivy-scan.sh
+
+          ./scripts/trivy-scan.sh \
+            "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
+
+
+      - name: Publish Trivy summary
+
+        if: always()
+
+        shell: bash
+
+        run: |
+
+          if [ -f trivy-summary.md ]; then
+
+            cat trivy-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+          fi
+
+
+      - name: Upload Trivy reports
+
+        if: always()
+
+        uses: actions/upload-artifact@v4
+
+        with:
+
+          name: blackduck-trivy-report-${{ github.sha }}
+
+          path: |
+
+            trivy-results.json
+
+            trivy-results.txt
+
+            trivy-summary.md
+
+          retention-days: 7
+
+
+  # ==========================================================
+  # MANUAL APPROVAL
+  # ==========================================================
+
+  approval:
+
+    name: Manual Security Approval
+
+    needs:
+
+      - sonar
+      - coverity
+      - blackduck
+
+    if: |
+      always() &&
+      (
+        needs.sonar.result == 'success' ||
+        needs.coverity.result == 'success' ||
+        needs.blackduck.result == 'success'
+      )
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    environment:
+
+      name: sast-production
+
+    steps:
+
+      - name: Security approval completed
+
+        shell: bash
+
+        run: |
+
+          echo "=========================================="
+          echo "SAST SECURITY APPROVAL"
+          echo "=========================================="
+
+          echo "Trivy scan completed."
+          echo "Manual approval received."
+          echo "Images can now be pushed."
+
+
+  # ==========================================================
+  # PUSH SONAR IMAGE
+  # ==========================================================
+
+  push-sonar:
+
+    name: Push SonarQube Image
+
+    needs:
+
+      - sonar
+      - approval
+
+    if: |
+      needs.sonar.result == 'success' &&
+      needs.approval.result == 'success'
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Push SonarQube image
+
+        shell: bash
+
+        run: |
+
+          cd sonar
+
+          chmod +x push.sh
+
+          ./push.sh
+
+
+  # ==========================================================
+  # PUSH COVERITY IMAGE
+  # ==========================================================
+
+  push-coverity:
+
+    name: Push Coverity Image
+
+    needs:
+
+      - coverity
+      - approval
+
+    if: |
+      needs.coverity.result == 'success' &&
+      needs.approval.result == 'success'
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Push Coverity image
+
+        shell: bash
+
+        run: |
+
+          cd coverity
+
+          chmod +x push.sh
+
+          ./push.sh
+
+
+  # ==========================================================
+  # PUSH BLACKDUCK IMAGE
+  # ==========================================================
+
+  push-blackduck:
+
+    name: Push Black Duck Image
+
+    needs:
+
+      - blackduck
+      - approval
+
+    if: |
+      needs.blackduck.result == 'success' &&
+      needs.approval.result == 'success'
+
+    runs-on: [self-hosted, Windows, sast-windows]
+
+    steps:
+
+      - name: Checkout repository
+
+        uses: actions/checkout@v4
+
+
+      - name: Push Black Duck image
+
+        shell: bash
+
+        run: |
+
+          cd blackduck
+
+          chmod +x push.sh
+
+          ./push.sh
