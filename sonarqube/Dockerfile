@@ -26,3 +26,5 @@ RUN dotnet --version && \
     (dotnet-sonarscanner --version || true)
 
 ENTRYPOINT ["/bin/bash"]
+
+
