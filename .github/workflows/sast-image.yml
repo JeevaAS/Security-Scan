@@ -148,16 +148,30 @@ jobs:
           echo "Local Registry Connectivity"
           echo "=========================================="
 
-          response=$(curl -s http://localhost:5000/v2/)
+          response=$(curl -s http://localhost:5000/v2/ || true)
 
-          echo "Registry response:"
-          echo "$response"
-
-          if [ "$response" != "{}" ]; then
-            echo "WARNING: Unexpected registry response"
+          if [ "$response" = "{}" ]; then
+            echo "Registry responded: $response"
+          else
+            echo "Registry not reachable at localhost:5000 — starting a temporary registry container for CI testing"
+            docker run -d -p 5000:5000 --name registry registry:2 || true
+            # wait up to 15s for registry to come up
+            for i in $(seq 1 15); do
+              response=$(curl -s http://localhost:5000/v2/ || true)
+              if [ "$response" = "{}" ]; then
+                echo "Registry started and responding"
+                break
+              fi
+              sleep 1
+            done
+            if [ "$response" != "{}" ]; then
+              echo "ERROR: Registry still not reachable after starting local registry"
+              # continue so we can collect logs later, but exit with non-zero to fail the job
+              exit 7
+            fi
           fi
 
-          echo "Registry connectivity successful."
+          echo "Registry connectivity check complete."
 
 
       # ------------------------------------------------------
@@ -311,9 +325,28 @@ jobs:
 
         run: |
 
-          response=$(curl -s http://localhost:5000/v2/)
+          echo "Checking local registry at http://localhost:5000/v2/"
+          response=$(curl -s http://localhost:5000/v2/ || true)
+          if [ "$response" = "{}" ]; then
+            echo "Registry responded: $response"
+          else
+            echo "Registry not reachable — starting temporary registry"
+            docker run -d -p 5000:5000 --name registry registry:2 || true
+            for i in $(seq 1 15); do
+              response=$(curl -s http://localhost:5000/v2/ || true)
+              if [ "$response" = "{}" ]; then
+                echo "Registry started and responding"
+                break
+              fi
+              sleep 1
+            done
+            if [ "$response" != "{}" ]; then
+              echo "ERROR: Registry still not reachable"
+              exit 7
+            fi
+          fi
 
-          echo "Registry response: $response"
+          echo "Registry connectivity check complete."
 
 
       - name: Trivy connectivity test
@@ -430,9 +463,28 @@ jobs:
 
         run: |
 
-          response=$(curl -s http://localhost:5000/v2/)
+          echo "Checking local registry at http://localhost:5000/v2/"
+          response=$(curl -s http://localhost:5000/v2/ || true)
+          if [ "$response" = "{}" ]; then
+            echo "Registry responded: $response"
+          else
+            echo "Registry not reachable — starting temporary registry"
+            docker run -d -p 5000:5000 --name registry registry:2 || true
+            for i in $(seq 1 15); do
+              response=$(curl -s http://localhost:5000/v2/ || true)
+              if [ "$response" = "{}" ]; then
+                echo "Registry started and responding"
+                break
+              fi
+              sleep 1
+            done
+            if [ "$response" != "{}" ]; then
+              echo "ERROR: Registry still not reachable"
+              exit 7
+            fi
+          fi
 
-          echo "Registry response: $response"
+          echo "Registry connectivity check complete."
 
 
       - name: Trivy connectivity test
