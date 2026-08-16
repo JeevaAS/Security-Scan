@@ -12,12 +12,7 @@ on:
       - 'Script/**'
       - '.github/workflows/sast-image.yml'
 
-  workflow_dispatch:
-    inputs:
-      scanner:
-        description: 'Select SAST image to build (sonar|coverity|blackduck|all)'
-        required: false
-        default: all
+  workflow_dispatch: {}
 
 # ============================================================
 # GLOBAL VARIABLES
