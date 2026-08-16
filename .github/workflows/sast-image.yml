@@ -16,8 +16,8 @@ on:
     inputs:
       scanner:
         description: 'Select SAST image to build (sonar|coverity|blackduck|all)'
-        required: true
-        default: 'all'
+        required: false
+        default: all
 
 # ============================================================
 # GLOBAL VARIABLES
