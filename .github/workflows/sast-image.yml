@@ -195,6 +195,18 @@ jobs:
             exit 1
           fi
 
+      - name: Install Trivy (if missing)
+
+        shell: bash
+
+        run: |
+          if ! command -v trivy >/dev/null 2>&1; then
+            echo "Installing trivy..."
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          else
+            echo "trivy already installed"
+          fi
+
 
       # ------------------------------------------------------
       # Build Docker Image
@@ -236,6 +248,18 @@ jobs:
           ./scripts/trivy-scan.sh \
             "${REGISTRY}/sast-sonarqube:${IMAGE_TAG}"
 
+      - name: List Trivy output files for debugging
+
+        if: always()
+
+        shell: bash
+
+        run: |
+          echo "Listing files in workspace:"
+          ls -la
+          echo "Listing potential Trivy outputs:"
+          ls -la trivy-*.json trivy-*.txt trivy-summary.md || true
+
 
       # ------------------------------------------------------
       # Publish Trivy result to GitHub Summary
@@ -265,6 +289,8 @@ jobs:
         if: always()
 
         uses: actions/upload-artifact@v4
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
         with:
 
@@ -357,6 +383,30 @@ jobs:
 
           trivy --version
 
+        - name: Install Trivy (if missing)
+
+          shell: bash
+
+          run: |
+            if ! command -v trivy >/dev/null 2>&1; then
+              echo "Installing trivy..."
+              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+            else
+              echo "trivy already installed"
+            fi
+
+        - name: Install Trivy (if missing)
+
+          shell: bash
+
+          run: |
+            if ! command -v trivy >/dev/null 2>&1; then
+              echo "Installing trivy..."
+              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+            else
+              echo "trivy already installed"
+            fi
+
 
       - name: Build Coverity image
 
@@ -382,6 +432,18 @@ jobs:
           ./scripts/trivy-scan.sh \
             "${REGISTRY}/sast-coverity:${IMAGE_TAG}"
 
+      - name: List Trivy output files for debugging
+
+        if: always()
+
+        shell: bash
+
+        run: |
+          echo "Listing files in workspace:"
+          ls -la
+          echo "Listing potential Trivy outputs:"
+          ls -la trivy-*.json trivy-*.txt trivy-summary.md || true
+
 
       - name: Publish Trivy summary
 
@@ -403,6 +465,8 @@ jobs:
         if: always()
 
         uses: actions/upload-artifact@v4
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
         with:
 
@@ -520,6 +584,18 @@ jobs:
           ./scripts/trivy-scan.sh \
             "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
 
+      - name: List Trivy output files for debugging
+
+        if: always()
+
+        shell: bash
+
+        run: |
+          echo "Listing files in workspace:"
+          ls -la
+          echo "Listing potential Trivy outputs:"
+          ls -la trivy-*.json trivy-*.txt trivy-summary.md || true
+
 
       - name: Publish Trivy summary
 
@@ -541,6 +617,8 @@ jobs:
         if: always()
 
         uses: actions/upload-artifact@v4
+        env:
+          ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
         with:
 
