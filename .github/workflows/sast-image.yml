@@ -580,6 +580,8 @@ jobs:
 
         shell: bash
 
+        env:
+          DETECT_URL: ${{ secrets.DETECT_URL }}
         run: |
 
           # find blackduck directory (case-insensitive and common variants) and run build
@@ -595,6 +597,13 @@ jobs:
           fi
           cd "${TARGET_DIR}"
           chmod +x build.sh
+
+          if [ -z "${DETECT_URL:-}" ]; then
+            echo "::warning::DETECT_URL is not set. The build will fail unless detect.jar is present in the ${TARGET_DIR} directory."
+          else
+            echo "DETECT_URL is set — build script will download detect.jar"
+          fi
+
           ./build.sh
 
 
