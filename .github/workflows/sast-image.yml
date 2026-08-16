@@ -640,26 +640,19 @@ jobs:
 
           ./build.sh
 
-          # verify image exists locally and push to registry so scanners can access it
+          # verify image exists locally so scanners can access it (do not push yet)
           echo "Verifying built image: ${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
           if ! docker image inspect "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" >/dev/null 2>&1; then
             echo "Warning: image not found locally with registry tag; attempting to find local image by name"
           fi
 
-          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
-            echo "Logging into registry ${REGISTRY}"
-            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
-          fi
 
-          echo "Pushing image to registry: ${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
-          docker push "${REGISTRY}/sast-blackduck:${IMAGE_TAG}" || true
-
-
-      - name: Skip Trivy for Black Duck (build-only)
-        if: false
+      - name: Trivy vulnerability scan
         shell: bash
         run: |
-          echo "Skipping Trivy scan for Black Duck as this workflow is configured to build-only."
+          echo "Running Trivy scan for Black Duck image"
+          chmod +x Script/trivy.sh
+          ./Script/trivy.sh "${REGISTRY}/sast-blackduck:${IMAGE_TAG}"
 
       - name: List Trivy output files for debugging
 
@@ -800,6 +793,13 @@ jobs:
             exit 1
           fi
           cd "${TARGET_DIR}"
+
+          # optional registry login using secrets; set REGISTRY_USERNAME and REGISTRY_PASSWORD in repo secrets
+          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
+            echo "Logging into registry ${REGISTRY}"
+            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
+          fi
+
           chmod +x push.sh
           ./push.sh
 
@@ -847,6 +847,12 @@ jobs:
             exit 1
           fi
           cd "${TARGET_DIR}"
+          # optional registry login using secrets; set REGISTRY_USERNAME and REGISTRY_PASSWORD in repo secrets
+          if [ -n "${REGISTRY_USERNAME:-}" ] && [ -n "${REGISTRY_PASSWORD:-}" ]; then
+            echo "Logging into registry ${REGISTRY}"
+            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin || true
+          fi
+
           chmod +x push.sh
           ./push.sh
 

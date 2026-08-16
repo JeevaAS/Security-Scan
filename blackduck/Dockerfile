@@ -26,3 +26,4 @@ RUN dotnet --version && \
     java -version
 
 ENTRYPOINT ["/bin/bash"]
+
