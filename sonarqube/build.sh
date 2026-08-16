@@ -2,15 +2,18 @@
 
 set -euo pipefail
 
-IMAGE="${JFROG_REGISTRY}/${JFROG_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}"
+REGISTRY="${REGISTRY:-localhost:5000}"
+REPOSITORY="${REPOSITORY:-}"
+IMAGE_NAME="${IMAGE_NAME:-sast-sonarqube}"
+IMAGE="${REGISTRY}/${REPOSITORY:+${REPOSITORY}/}${IMAGE_NAME}:${IMAGE_TAG}"
 
 echo "=============================================="
 echo " SONARQUBE IMAGE BUILD"
 echo "=============================================="
 
-echo "JFrog Registry : ${JFROG_REGISTRY}"
-echo "Repository     : ${JFROG_REPOSITORY}"
-echo "Image          : ${IMAGE}"
+echo "Registry : ${REGISTRY}"
+echo "Repository : ${REPOSITORY}"
+echo "Image : ${IMAGE}"
 
 docker build \
     --pull \

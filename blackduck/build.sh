@@ -2,7 +2,10 @@
 
 set -euo pipefail
 
-IMAGE="${JFROG_REGISTRY}/${JFROG_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}"
+REGISTRY="${REGISTRY:-localhost:5000}"
+REPOSITORY="${REPOSITORY:-}"
+IMAGE_NAME="${IMAGE_NAME:-sast-blackduck}"
+IMAGE="${REGISTRY}/${REPOSITORY:+${REPOSITORY}/}${IMAGE_NAME}:${IMAGE_TAG}"
 
 echo "=============================================="
 echo " BLACK DUCK IMAGE BUILD"

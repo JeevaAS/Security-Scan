@@ -2,10 +2,13 @@
 
 set -euo pipefail
 
-IMAGE="${JFROG_REGISTRY}/${JFROG_REPOSITORY}/${IMAGE_NAME}:${IMAGE_TAG}"
+REGISTRY="${REGISTRY:-localhost:5000}"
+REPOSITORY="${REPOSITORY:-}"
+IMAGE_NAME="${IMAGE_NAME:-sast-coverity}"
+IMAGE="${REGISTRY}/${REPOSITORY:+${REPOSITORY}/}${IMAGE_NAME}:${IMAGE_TAG}"
 
 echo "=============================================="
-echo " PUSHING COVERITY IMAGE TO JFROG"
+echo " PUSHING COVERITY IMAGE"
 echo "=============================================="
 
 docker push "${IMAGE}"
