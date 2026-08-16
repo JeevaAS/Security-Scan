@@ -33,3 +33,4 @@ RUN dotnet --version && \
     (cov-analyze --version || true)
 
 ENTRYPOINT ["/bin/bash"]
+
