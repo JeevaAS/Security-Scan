@@ -1,0 +1,24 @@
+name: Test self-hosted SAST runner
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    name: Smoke test on SAST runner
+    runs-on: [self-hosted, SAST, Windows, X64]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Print user and OS
+        shell: pwsh
+        run: |
+          whoami
+          Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version
+
+      - name: Check Docker
+        shell: pwsh
+        run: |
+          docker --version || Write-Host 'docker not available'
+          docker run --rm hello-world || Write-Host 'docker run failed or no container runtime'
