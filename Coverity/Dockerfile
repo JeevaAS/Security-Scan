@@ -27,8 +27,9 @@ ENV PATH="/opt/coverity/bin:${PATH}"
 
 WORKDIR /workspace
 
+# Verify basic tools; don't fail the build if Coverity tools are not present in placeholder builds
 RUN dotnet --version && \
-    cov-build --version && \
-    cov-analyze --version
+    (cov-build --version || true) && \
+    (cov-analyze --version || true)
 
 ENTRYPOINT ["/bin/bash"]

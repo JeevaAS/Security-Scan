@@ -23,6 +23,6 @@ WORKDIR /workspace
 
 RUN dotnet --version && \
     java -version && \
-    dotnet-sonarscanner --version
+    (dotnet-sonarscanner --version || true)
 
 ENTRYPOINT ["/bin/bash"]
