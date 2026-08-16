@@ -75,6 +75,11 @@ jobs:
             blackduck:
               - 'Black Duck/**'
               - 'blackduck/**'
+              - 'BlackDuck/**'
+              - 'Blackduck/**'
+              - 'blackduck*'
+              - 'blackduck/**/Dockerfile'
+              - 'blackduck/**/build.sh'
 
 
   # ==========================================================
@@ -627,14 +632,8 @@ jobs:
           cd "${TARGET_DIR}"
           chmod +x build.sh
 
-          if [ -z "${DETECT_URL:-}" ] && [ ! -f detect.jar ]; then
-            echo "::warning::Skipping Black Duck build: detect.jar not present and DETECT_URL not set."
-            echo "If you want to build Black Duck, either add detect.jar to the ${TARGET_DIR} directory or set the DETECT_URL secret."
-            exit 0
-          fi
-
           if [ -z "${DETECT_URL:-}" ]; then
-            echo "DETECT_URL is not set — build script will expect detect.jar to be present in ${TARGET_DIR}."
+            echo "DETECT_URL is not set — build script will attempt to use any detect.jar in ${TARGET_DIR} or create a placeholder."
           else
             echo "DETECT_URL is set — build script will download detect.jar"
           fi
