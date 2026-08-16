@@ -382,30 +382,17 @@ jobs:
         run: |
 
           trivy --version
+      - name: Install Trivy (if missing)
 
-        - name: Install Trivy (if missing)
+        shell: bash
 
-          shell: bash
-
-          run: |
-            if ! command -v trivy >/dev/null 2>&1; then
-              echo "Installing trivy..."
-              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-            else
-              echo "trivy already installed"
-            fi
-
-        - name: Install Trivy (if missing)
-
-          shell: bash
-
-          run: |
-            if ! command -v trivy >/dev/null 2>&1; then
-              echo "Installing trivy..."
-              curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
-            else
-              echo "trivy already installed"
-            fi
+        run: |
+          if ! command -v trivy >/dev/null 2>&1; then
+            echo "Installing trivy..."
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin
+          else
+            echo "trivy already installed"
+          fi
 
 
       - name: Build Coverity image
