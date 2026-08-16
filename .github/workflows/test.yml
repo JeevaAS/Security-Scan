@@ -6,7 +6,7 @@ on:
 jobs:
   smoke:
     name: Smoke test on SAST runner
-    runs-on: [self-hosted, X64, Linux]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
