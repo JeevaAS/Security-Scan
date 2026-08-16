@@ -1,5 +1,4 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim
-
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 ENV DOTNET_NOLOGO=true
